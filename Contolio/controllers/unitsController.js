@@ -30,7 +30,7 @@ exports.addUnits = [
                 refData = {
                     // user_id:user_id,
                     building_id: building_id,
-                    unitNo: unitNo,
+                    // unitNo: unitNo,
                     // tenantName:tenantName,
                     rooms: rooms,
                     bathrooms: bathrooms,
