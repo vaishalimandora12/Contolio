@@ -4,6 +4,7 @@ const port = 3000;
 const path = require("path");
 require('./database/db')
 const cors = require('cors');
+const firebase= require('./firebase/firebase');
 
 app.use(cors())
 const bodyParser = require('body-parser');
@@ -27,7 +28,6 @@ const tenantsRoute = require('./routes/tenantsRoute');
 app.use('/', tenantsRoute);
 const contractsRoute = require('./routes/contractsRoute');
 app.use('/', contractsRoute);
-
 
 
 app.listen(port, () => {
