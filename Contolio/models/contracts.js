@@ -31,6 +31,6 @@ const contractSchema = new mongoose.Schema({
         type:Date,
         default:Date()
     }
-});
+},{timestamps:true});
 
 module.exports = mongoose.model('contracts',contractSchema)

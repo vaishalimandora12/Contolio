@@ -115,26 +115,61 @@ exports.deleteContract = [
     }
 ]
 
+// exports.searchContracts = [
+//     async (req, res) => {
+//         try {
+//             const { search } = req.query
+//             if (search) {
+//                 const findContract = await CONTRACTS.aggregate(
+//                     {
+//                         $or: [
+//                             {contract_name: { $regex: ".*" + search + ".*", $options: 'i' }},
+//                             {unitNo: { $regex: ".*" + search + ".*", $options: 'i' }},
+//                            ],
+//                     }
+//                 );
+//                 console.log("find=====",findContract);
+//                 return (res.status(200).json({
+//                     code: 200,
+//                     message: "Contract Found",
+//                     data: findContract,
+//                 }))
+//             }
+//         }
+//         catch (err) {
+//             console.log(err)
+//             return (res.status(500).json({
+//                 code: 500,
+//                 message: "catch error!!"
+//             }))
+//         }
+//     }
+// ]
 
 exports.searchContracts = [
     async (req, res) => {
         try {
-            const { search } = req.query
+            const { search } = req.query;
             if (search) {
-                 const findContract = await CONTRACTS.find({ contract_name: { $regex: `^${search ? search : ''}`, $options: 'i' } });
-                    return (res.status(200).json({
-                        code: 200,
-                        message: "Contract Found",
-                        data:findContract ,
-                    }))
-            }
-        }
-        catch (err) {
-            console.log(err)
-            return (res.status(500).json({
+                const findContract = await CONTRACTS.find(
+                    {
+                     contract_name: { $regex: ".*" + search + ".*", $options: 'i' }  
+                    } ,   
+
+               );
+                console.log("find=====", findContract);
+                return res.status(200).json({
+                    code: 200,
+                    message: "Contract Found",
+                    data: findContract,
+                });
+            } 
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
                 code: 500,
-                message: "catch error!!"
-            }))
+                message:"catch Error",
+            });
         }
     }
-]
+];

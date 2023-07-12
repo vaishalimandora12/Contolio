@@ -1,7 +1,6 @@
-const OWNERS= require('../models/owners');
+const OWNERS = require('../models/owners');
 const JWT = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const owners = require('../models/owners');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -17,17 +16,14 @@ function generateRandomString(length) {
 const randomString = generateRandomString(6);
 
 
-exports.addOwners=[
-    
-    // body('units_id').trim().exists().notEmpty().withMessage('Unit id is required'),
-    // body('building_id').trim().exists().notEmpty().withMessage('building_id is required'),
+exports.addOwners = [
+
     body('ownerName').trim().exists().notEmpty().withMessage('ownerName is required'),
-    // body('ownerId').trim().exists().notEmpty().withMessage('ownerId is required'),
     body('ownerEmail').trim().exists().notEmpty().withMessage('ownerEmail is required'),
     body('ownerPhone').exists().notEmpty().withMessage('ownerPhone is required'),
     //body('user_id').trim().exists().notEmpty().withMessage('user_id is required'), 
-    async(req,res)=>{
-        try{
+    async (req, res) => {
+        try {
             const error = validationResult(req);
             if (!error.isEmpty()) {
                 return res.status(400).json({
@@ -37,24 +33,23 @@ exports.addOwners=[
             }
             // console.log(">>",req.body)
             //     return
-            const{ownerEmail}=req.body;
-            const ownerExist=await OWNERS.findOne({ownerEmail:ownerEmail});
-            if(ownerExist)
-            {
+            const { ownerEmail } = req.body;
+            const ownerExist = await OWNERS.findOne({ ownerEmail: ownerEmail });
+            if (ownerExist) {
                 return (res.status(400).json({
                     code: 400,
                     message: "Owner Already Exists....",
                 }))
             }
             else {
-                
-                const { ownerName,ownerEmail,ownerPhone,remarks} = req.body;
+
+                const { ownerName, ownerEmail, ownerPhone, remarks } = req.body;
                 refData = {
-                    ownerName:ownerName,
-                    ownerId:randomString,
-                    ownerEmail:ownerEmail,
-                    ownerPhone:ownerPhone,  
-                    remarks:remarks                
+                    ownerName: ownerName,
+                    ownerId: randomString,
+                    ownerEmail: ownerEmail,
+                    ownerPhone: ownerPhone,
+                    remarks: remarks
                 }
 
                 const addOwners = await OWNERS.create(refData)
@@ -73,7 +68,7 @@ exports.addOwners=[
                 }
             }
         }
-        catch(err){
+        catch (err) {
             console.log(err)
             return (res.status(500).json({
                 code: 500,
@@ -110,7 +105,7 @@ exports.getOwners = async (req, res) => {
 }
 
 exports.editOwnerDetails = [
-    
+
     body('ownerName').trim().exists().notEmpty().withMessage('ownerName is required'),
     body('ownerEmail').trim().exists().notEmpty().withMessage('ownerEmail is required'),
     body('ownerPhone').trim().exists().notEmpty().withMessage('ownerPhone is required'),
@@ -125,20 +120,20 @@ exports.editOwnerDetails = [
                 })
             }
             else {
-                const arrayOfEditKeys=["ownerName","ownerEmail","ownerPhone"];
-                const objectUpdate= {};
-                
+                const arrayOfEditKeys = ["ownerName", "ownerEmail", "ownerPhone"];
+                const objectUpdate = {};
+
                 for (const key of arrayOfEditKeys) {
                     if (req.body[key] != null) {
                         objectUpdate[key] = req.body[key]
                     }
                 }
-                const edit = await OWNERS.findByIdAndUpdate( {_id : req.body._id} , objectUpdate, { new: true });
+                const edit = await OWNERS.findByIdAndUpdate({ _id: req.body._id }, objectUpdate, { new: true });
                 if (edit) {
                     return (res.status(200).json({
                         code: 200,
                         message: "successfuly edit..",
-                        data:edit
+                        data: edit
                     }))
                 }
                 else {

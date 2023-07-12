@@ -15,7 +15,7 @@ let serviceAccount  ={
     "universe_domain": "googleapis.com"
   }
   
-  const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+ const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
  const { getFirestore, Timestamp, FieldValue, Filter } = require('firebase-admin/firestore');
   initializeApp({
     credential: cert(serviceAccount)

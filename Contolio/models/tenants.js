@@ -1,11 +1,11 @@
-const mongoose=require('mongoose');
-const tenantsSchema=new mongoose.Schema({
+const mongoose = require('mongoose');
+const tenantsSchema = new mongoose.Schema({
     building_id: {
         type: mongoose.Types.ObjectId,
         required: true,
         ref: 'building_management'
     },
-    units_id: {
+    unit_id: {
         type: mongoose.Types.ObjectId,
         required: true,
         ref: 'units'
@@ -15,32 +15,40 @@ const tenantsSchema=new mongoose.Schema({
         required: true,
         ref: 'contracts'
     },
-   
-    tenantName:{
+    tenantName: {
         type: String,
     },
-    tenantEmail:{
+    tenantEmail: {
         type: String,
     },
-    tenantPhone:{
-        type:Number,
+    tenantPhone: {
+        type: Number,
     },
-    country:{
-        type:String,
-    },
-    contract:{
-        type:String,
-    },
-    tenantID:{
+    contract: {
         type: String,
     },
-    status:{
-        type:Boolean,
-        default:true,
+    tenantID: {
+        type: String,
     },
-    search:{
+    status: {
+        type: Boolean,
+        default: true,
+    },
+    tenant_status: {
+        type: String,
+        enum: ['Request', 'Linked', 'Unlink'],
+        default: "Request",
+    },
+    search: {
+        type: String,
+    },
+    payment:{
         type:String,
-    }
+    },
+    created_on:{
+        type:Date,
+        default:Date()
+    },
 })
 
-module.exports = mongoose.model('tenants',tenantsSchema);
+module.exports = mongoose.model('tenants', tenantsSchema);

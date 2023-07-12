@@ -6,7 +6,10 @@ const router=express.Router();
 
 
 router.post('/addTenants',middleware,tenantsController.addTenants);
-router.get('/showTenants',middleware,tenantsController.showTenants);
+router.get('/showTenantsRequest',middleware,tenantsController.showTenantsRequest);
+router.put('/editTenants',middleware,tenantsController.editTenants);
+router.delete('/deleteTenants',middleware,tenantsController.deleteTenants);
+
 
 
 

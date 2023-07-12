@@ -3,6 +3,7 @@ const JWT = require('jsonwebtoken');
 const salt = 10;
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
+const nodemailer = require('nodemailer');
 
 
 exports.singInLogin = [
@@ -92,7 +93,7 @@ exports.register = [
 
             const { email, password } = req.body;
 
-            const findUser=await USER.findOne({email:email})
+            const findUser = await USER.findOne({ email: email })
 
             if (findUser) {
                 return res.status(200).json({
@@ -100,12 +101,12 @@ exports.register = [
                     message: "User is already exist",
                     data: {
                         email: findUser.email,
-                       
+
                     }
                 })
             }
-            else{
-                
+            else {
+
                 const signtoken = JWT.sign({ email: email }, 'vaishali');
                 const hashed = await bcrypt.hash(password, salt);
                 const refData = {
@@ -129,19 +130,19 @@ exports.register = [
                         message: "Oops...Something went wrong!!!!!"
                     }));
                 }
-            
+
             }
         }
-    
 
-    catch(err) {
-        console.log(err)
-                return (res.status(500).json({
-                    code: 500,
-                    message: "CATCH ERROR"
-                }))
-            };
-        }];
+
+        catch (err) {
+            console.log(err)
+            return (res.status(500).json({
+                code: 500,
+                message: "CATCH ERROR"
+            }))
+        };
+    }];
 
 exports.otpRegister = [
     body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
@@ -171,7 +172,7 @@ exports.otpRegister = [
 
                 }))
             }
-            const { firstname, lastname, email, password,phone,role,country,company,officeContact } = req.body;
+            const { firstname, lastname, email, password, phone, role, country, company, officeContact } = req.body;
             console.log('req.body', req.body)
             const findUser = await USER.findOne({ email: email })
             if (findUser) {
@@ -197,13 +198,13 @@ exports.otpRegister = [
                     lastname: lastname,
                     email: email,
                     password: hashed,
-                    phone:phone,
-                    country:country,
-                    role:role,
-                    company:company,
-                    officeContact:officeContact,
+                    phone: phone,
+                    country: country,
+                    role: role,
+                    company: company,
+                    officeContact: officeContact,
                     otp: otp,
-                    
+
                 }
 
                 const createNewUser = await USER.create(refData);
@@ -211,7 +212,7 @@ exports.otpRegister = [
                     return (res.status(200).json({
                         code: 200,
                         message: "OTP Sent",
-                        token:signtoken
+                        token: signtoken
 
 
                     }))
@@ -238,7 +239,7 @@ exports.otpRegister = [
         }
     }
 
-] 
+]
 
 exports.otpVerification = [
     body('otp').exists().notEmpty().withMessage("otp is required"),
@@ -254,8 +255,8 @@ exports.otpVerification = [
                 }))
             }
             const { email, otp } = req.body;
-            console.log('req.body',req.body);
-            const userOtp = await USER.findOne({ email: email },{ otp: otp });
+            console.log('req.body', req.body);
+            const userOtp = await USER.findOne({ email: email }, { otp: otp });
             console.log(userOtp);
             if (!userOtp) {
                 console.log("hhhhhhhhhhhhh");
@@ -265,7 +266,7 @@ exports.otpVerification = [
                 }))
             }
             else {
-                const verified = await USER.updateOne({ email: email }, {isOtpVerified: true})
+                const verified = await USER.updateOne({ email: email }, { isOtpVerified: true })
                 if (verified) {
                     const signToken = JWT.sign({ email: email }, 'vaishali');
                     return (res.status(200).json({
@@ -298,7 +299,7 @@ exports.otpVerification = [
 ]
 
 exports.resendOtp = [
-    async (req,res) => {
+    async (req, res) => {
         try {
             const otp = 4321;
             const { email } = req.body;
@@ -367,7 +368,7 @@ exports.otpSignUpLogin = [
             if (findUser) {
                 console.log("ffffffffffffff");
                 //const loginToken = JWT.sign({ email: email })      
-               
+
                 const otp = 123456;
                 const updateUser = await USER.updateOne({ email: email }, { otp: otp })
                 if (updateUser) {
@@ -392,7 +393,7 @@ exports.otpSignUpLogin = [
                         company: company,
                         password: hashed,
                         otp: otp,
-                        token:signupToken
+                        token: signupToken
                     }
                     const createUser = await USER.create(refData);
 
@@ -447,7 +448,7 @@ exports.changePassword = [
             else {
                 const { email, currentPassword, newPassword } = req.body;
                 console.log('req.body', req.body);
-                const findUser = await USER.findOne({ _id:req.currentUser._id});
+                const findUser = await USER.findOne({ _id: req.currentUser._id });
                 console.log(findUser);
                 if (!findUser) {
                     return (res.status(400).json({
@@ -499,22 +500,22 @@ exports.changePassword = [
     }
 ]
 
-exports.getProfile = [
-    
+exports.getUserProfile = [
+
     async (req, res) => {
         console.log(req.currentUser)
         try {
             // const { email } = req.body
             // const findUser = await USER.findOne({ email: email })
             // if (findUser)
-             const userData=req.currentUser ;
-            
-                return (res.status(200).json({
-                    code: 200,
-                    message: "profile fetch successfully...",
-                     data:req.currentUser
-                }))
-            
+            const userData = req.currentUser;
+
+            return (res.status(200).json({
+                code: 200,
+                message: "profile fetch successfully...",
+                data: req.currentUser
+            }))
+
 
         }
         catch (err) {
@@ -558,7 +559,7 @@ exports.addUser = [
                 })
             }
             const { firstname, phone, role, country, company, officeContact } = req.body;
-           const email=req.body.email.toLowerCase();
+            const email = req.body.email.toLowerCase();
             const find = await USER.findOne({ email: email })
             if (!find) {
                 const defaultPassword = "123@abc";
@@ -567,7 +568,7 @@ exports.addUser = [
                 const refData = {
                     firstname: firstname,
                     email: email,
-                    password: hashed,                              
+                    password: hashed,
                     phone: phone,
                     country: country,
                     role: role,
@@ -623,20 +624,20 @@ exports.login = [
             }
             const { password } = req.body;
             //console.log('req.body====',req.body);
-            const email=req.body.email.toLowerCase();
+            const email = req.body.email.toLowerCase();
 
             const findUser = await USER.findOne({ email: email })
             // console.log('findUser', findUser);
             if (findUser) {
-                const com_pass = await bcrypt.compare(password,findUser.password);
+                const com_pass = await bcrypt.compare(password, findUser.password);
                 if (!com_pass) {
                     return (res.status(400).json({
                         code: 400,
                         message: "password is not matched",
                     }))
-                }                
+                }
                 else {
-                    const signToken = JWT.sign({_id: findUser._id ,email: email }, 'vaishali');
+                    const signToken = JWT.sign({ _id: findUser._id, email: email }, 'vaishali');
                     return res.status(200).json({
                         code: 200,
                         message: "User login successfully",
@@ -647,13 +648,13 @@ exports.login = [
                     });
                 }
             }
-            else{
-                return(res.status(400).json({
-                    code:400,
-                    message:"user not exist",
+            else {
+                return (res.status(400).json({
+                    code: 400,
+                    message: "user not exist",
                 }))
             }
-                }
+        }
         catch (err) {
             console.log(err)
             return (res.status(500).json({
@@ -665,25 +666,6 @@ exports.login = [
     }
 ]
 
-
-
-
-exports.getUserProfile = async (req, res) => {
-    try {
-        return (res.status(200).json({
-            code: 200,
-            message: "profile fetch successfully...",
-            data: req.currentUser
-        }));
-    }
-    catch (err) {
-        console.log(err);
-        return (res.status(500).json({
-            code: 500,
-            message: "CATCH ERROR.."
-        }));
-    }
-}
 
 exports.editUserProfile = [
     // body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
@@ -717,16 +699,16 @@ exports.editUserProfile = [
             //     }
             // }
 
-            const objectUpdate= {};
+            const objectUpdate = {};
             for (const key of arrayOfEditKeys) {
                 if (req.body[key] != null) {
                     objectUpdate[key] = req.body[key]
                 }
             }
 
-            console.log('object',objectUpdate);
+            console.log('object', objectUpdate);
             //  const email=req.body.email.toLowerCase();
-            const update = await USER.findOneAndUpdate({ _id: req.currentUser._id }, objectUpdate,{new:true});
+            const update = await USER.findOneAndUpdate({ _id: req.currentUser._id }, objectUpdate, { new: true });
             console.log(update);
             if (!update) {
                 return (res.status(400).json({
@@ -774,7 +756,7 @@ exports.changeUserPassword = [
                 const compare = await bcrypt.compare(currentPassword, findUser.password);
                 if (compare) {
                     const hashed = await bcrypt.hash(newPassword, salt);
-                    const passwordUpdate = await USER.updateOne({_id: req.currentUser._id},{ password: hashed });
+                    const passwordUpdate = await USER.updateOne({ _id: req.currentUser._id }, { password: hashed });
                     if (passwordUpdate) {
                         return (res.status(200).json({
                             code: 200,
@@ -806,10 +788,9 @@ exports.changeUserPassword = [
     }
 ]
 
-
 exports.forgotPassword = [
     body('email').trim().exists().notEmpty().withMessage('Email is required')
-     .isEmail().withMessage('Email must be a valid email address'),
+        .isEmail().withMessage('Email must be a valid email address'),
     async (req, res) => {
         try {
             const error = validationResult(req);
@@ -820,19 +801,47 @@ exports.forgotPassword = [
                 })
             }
             const { email } = req.body;
-            const check = await USER.findOne({_id: req.currentUser._id});
-            if (check) {
-                return (res.status(200).json({
-                    code: 200,
-                    message: "OTP SENT,please check your email"
-                }))
-            }
-            else {
-                return (res.status(400).json({
-                    code: 400,
-                    message: "Email does not exist"
-                }))
-            }
+            const check = await USER.findOne({ email: email });
+            // console.log("check>>>>>>>", check);
+            const mailer = nodemailer.createTransport({
+                service: "gmail",
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
+                auth: {
+                    user: process.env.MAIL_USERNAME,
+                    pass: process.env.MAIL_PASSWORD,
+                },
+                tls: {
+                    rejectUnauthorized: false,
+                  }
+            });
+            // console.log("=======",check.email)
+            await mailer.sendMail({
+                from: "vaishalimandora12@gmail.com",
+                to: check.email,
+                subject: "FORGOT YOUR PASSWORD",
+                html: `
+                 <h3>Click the link below to reset you're password</h3>
+                 ${req.protocol}://${req.headers.host}`,
+            });
+
+            // if (check) {
+            //     return (res.status(200).json({
+            //         code: 200,
+            //         message: "OTP SENT,please check your email"
+            //     }))
+
+            // }
+            // else {
+            //     return (res.status(400).json({
+            //         code: 400,
+            //         message: "Email does not exist"
+            //     }))
+            // }
+            res.status(201).json({
+                message:"code sent successfullyyyy...."
+            })
         }
         catch (err) {
             console.log(err)

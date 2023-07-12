@@ -18,16 +18,24 @@ app.set("view engine", "ejs");
 
 const userRoute = require('./routes/usersRoute');
 app.use('/', userRoute);
+
 const buildingRoute = require('./routes/buildsRoute');
 app.use('/', buildingRoute);
+
 const unitsRoute = require('./routes/unitsRoute');
 app.use('/', unitsRoute);
+
 const ownersRoute = require('./routes/ownersRoute');
 app.use('/', ownersRoute);
+
 const tenantsRoute = require('./routes/tenantsRoute');
 app.use('/', tenantsRoute);
+
 const contractsRoute = require('./routes/contractsRoute');
 app.use('/', contractsRoute);
+
+const paymentRoute=require('./routes/paymentsRoute');
+app.use('/', paymentRoute);
 
 
 app.listen(port, () => {
