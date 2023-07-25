@@ -31,24 +31,37 @@ const paymentSchema = new mongoose.Schema({
     },
     payment_status:{
         type:String,
+        enum:['Voided','Upcoming Payment','Paid','Overdue Payment']
     },
     paymentId:{
         type:String,
     },
-    upcoming_payment:{
-        type:Number,
-    },
+    status: {
+        type: String,
+        enum: ['Upcoming Payment', 'Pending', 'Settled', 'Overdue', 'Cheque Returned', 'Voided']
+      },
     remark:{
         type:String,
     },
+    chequeAmount:{
+         type: Number 
+        },
     payment_type:{
         type:String,
         enum:['1','2']
     },
+    addExpenses: [{
+        chequeAmount: { type: Number },
+        cheque_date: { type: Date },
+        status: {
+          type: String,
+          enum: ['upcoming payment', 'Pending', 'Settled', 'Overdue', 'Cheque Returned', 'Voided']
+        },
+        cheque_no: { type: Number }
+      }],    
     created_on:{
         type:Date,
         default:Date(),
-    }
-
+    },
 })
 module.exports = mongoose.model('payments', paymentSchema);

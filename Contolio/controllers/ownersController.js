@@ -21,7 +21,6 @@ exports.addOwners = [
     body('ownerName').trim().exists().notEmpty().withMessage('ownerName is required'),
     body('ownerEmail').trim().exists().notEmpty().withMessage('ownerEmail is required'),
     body('ownerPhone').exists().notEmpty().withMessage('ownerPhone is required'),
-    //body('user_id').trim().exists().notEmpty().withMessage('user_id is required'), 
     async (req, res) => {
         try {
             const error = validationResult(req);
@@ -31,8 +30,6 @@ exports.addOwners = [
                     message: error.array()[0]['msg']
                 })
             }
-            // console.log(">>",req.body)
-            //     return
             const { ownerEmail } = req.body;
             const ownerExist = await OWNERS.findOne({ ownerEmail: ownerEmail });
             if (ownerExist) {
@@ -79,8 +76,11 @@ exports.addOwners = [
 ]
 
 exports.getOwners = async (req, res) => {
+    let page = Number(req.query.page) || 1;
+    let limit = Number(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
     try {
-        const get = await OWNERS.find();
+        const get = await OWNERS.find().skip(skip).limit(limit);
         if (get.length > 0) {
             return (res.status(200).json({
                 code: 200,
@@ -105,43 +105,29 @@ exports.getOwners = async (req, res) => {
 }
 
 exports.editOwnerDetails = [
-
-    body('ownerName').trim().exists().notEmpty().withMessage('ownerName is required'),
-    body('ownerEmail').trim().exists().notEmpty().withMessage('ownerEmail is required'),
-    body('ownerPhone').trim().exists().notEmpty().withMessage('ownerPhone is required'),
-
     async (req, res) => {
         try {
-            const error = validationResult(req);
-            if (!error.isEmpty()) {
-                return res.status(400).json({
-                    code: 400,
-                    message: error.array()[0]['msg']
-                })
+            const arrayOfEditKeys = ["ownerName", "ownerEmail", "ownerPhone", "remarks"];
+            const objectUpdate = {};
+
+            for (const key of arrayOfEditKeys) {
+                if (req.body[key] != null) {
+                    objectUpdate[key] = req.body[key]
+                }
+            }
+            const edit = await OWNERS.findByIdAndUpdate({ _id: req.body._id }, objectUpdate, { new: true });
+            if (edit) {
+                return (res.status(200).json({
+                    code: 200,
+                    message: "successfuly edit..",
+                    data: edit
+                }))
             }
             else {
-                const arrayOfEditKeys = ["ownerName", "ownerEmail", "ownerPhone"];
-                const objectUpdate = {};
-
-                for (const key of arrayOfEditKeys) {
-                    if (req.body[key] != null) {
-                        objectUpdate[key] = req.body[key]
-                    }
-                }
-                const edit = await OWNERS.findByIdAndUpdate({ _id: req.body._id }, objectUpdate, { new: true });
-                if (edit) {
-                    return (res.status(200).json({
-                        code: 200,
-                        message: "successfuly edit..",
-                        data: edit
-                    }))
-                }
-                else {
-                    return (res.status(400).json({
-                        code: 400,
-                        message: "somthing went wrong!"
-                    }))
-                }
+                return (res.status(400).json({
+                    code: 400,
+                    message: "somthing went wrong!"
+                }))
             }
         }
         catch (err) {
@@ -191,3 +177,29 @@ exports.deleteOwner = [
 ]
 
 
+exports.searchOwner = [
+    async (req, res) => {
+        try {
+            const { search } = req.query;
+            if (search) {
+                const findOwner = await OWNERS.find(
+                    {
+                        ownerName: { $regex: ".*" + search + ".*", $options: 'i' }
+                    },
+                );
+                return res.status(200).json({
+                    code: 200,
+                    message: "Owner Found",
+                    data: findOwner,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
+                code: 500,
+                message: "catch Error",
+            });
+        }
+
+    }
+]

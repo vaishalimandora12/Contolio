@@ -5,8 +5,19 @@ const unitsSchema=new mongoose.Schema({
     
     building_id: {
         type: mongoose.Types.ObjectId,
-        required: true,
         ref: 'building_management'
+    },
+    owner_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'owners'
+    },
+    tenant_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'tenants'
+    },
+    contract_id: {
+        type: mongoose.Types.ObjectId,
+        ref: 'contracts'
     },
     unitNo:{
         type: Number,
@@ -21,18 +32,11 @@ const unitsSchema=new mongoose.Schema({
     bathrooms:{
         type:Number,
     },
-    // tenantName:{
-    //     type:String,
-
-    // },
     monthly_rent:{
         type:String,
-
     },
     currency:{
         type:String,
-
-
     },
     description:{
         type:String,

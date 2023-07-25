@@ -1,6 +1,7 @@
 const BUILDINGS = require('../models/buildings');
 const JWT = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const UNITS = require("../models/units");
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -12,14 +13,13 @@ function generateRandomString(length) {
     }
     return result;
 }
-// Example usage: generate a random string of length 10
 const randomString = generateRandomString(6);
 
 
 exports.addBuildings = [
     body('buildingName').trim().exists().notEmpty().withMessage('building name  is required'),
     body('address').trim().exists().notEmpty().withMessage('address is required'),
-   body('locationLink').trim().exists().notEmpty().withMessage('locationLink is required'),
+    body('locationLink').trim().exists().notEmpty().withMessage('locationLink is required'),
     body('description').trim().exists().notEmpty().withMessage('description is required'),
 
     async (req, res) => {
@@ -45,7 +45,7 @@ exports.addBuildings = [
                     return (res.status(200).json({
                         code: 200,
                         message: "Building added successfully...",
-                        data:addBuilding
+                        data: addBuilding
                     }))
                 }
                 else {
@@ -70,7 +70,20 @@ exports.addBuildings = [
 exports.getBuildingDetails = [
     async (req, res) => {
         try {
-            const find = await BUILDINGS.findOne({ _id: req.query.build_id })
+            const build_id = req.query.build_id
+            let building_id = build_id;
+            const find = await BUILDINGS.findOne({ _id: build_id })
+            const unitsNumber = await UNITS.findOne({ building_id }).count();
+            const units = await UNITS.aggregate([{
+                $match: { fullUnit: "true" }
+            }, {
+                $lookup: {
+                    from: "owners",
+                    localField: "owner_id",
+                    foreignField: "_id",
+                    as: "OwnerDetails"
+                }
+            }])
             if (!find) {
                 return (res.status(400).json({
                     code: 400,
@@ -81,7 +94,7 @@ exports.getBuildingDetails = [
                 return (res.status(200).json({
                     code: 200,
                     message: "Building details fetch successfully...",
-                    data: find
+                    data: find, unitsNumber, units
                 }))
             }
         }
@@ -134,44 +147,30 @@ exports.deleteBuilding = [
 
 
 exports.editBuilding = [
-    body('buildingName').trim().exists().notEmpty().withMessage('building name  is required'),
-    body('address').trim().exists().notEmpty().withMessage('address is required'),
-    body('location').trim().exists().notEmpty().withMessage('location is required'),
-    body('description').trim().exists().notEmpty().withMessage('description is required'),
-
     async (req, res) => {
         try {
-            const error = validationResult(req);
-            if (!error.isEmpty()) {
-                return res.status(400).json({
-                    code: 400,
-                    message: error.array()[0]['msg']
-                })
+            const arrayOfEditKeys = ["buildingName", "address", "locationLink", "description"];
+            const objectUpdate = {};
+            for (const key of arrayOfEditKeys) {
+                if (req.body[key] != null) {
+                    objectUpdate[key] = req.body[key]
+                }
+            }
+            const edit = await BUILDINGS.findByIdAndUpdate({ _id: req.body.build_id }, objectUpdate, { new: true });
+            if (edit) {
+                return (res.status(200).json({
+                    code: 200,
+                    message: "successfuly edit..",
+                    data: edit
+                }))
             }
             else {
-                const arrayOfEditKeys=["buildingName", "address", "location", "units", "description"];
-                const objectUpdate= {};
-                for (const key of arrayOfEditKeys) {
-                    if (req.body[key] != null) {
-                        objectUpdate[key] = req.body[key]
-                    }
-                }
-                const edit = await BUILDINGS.findByIdAndUpdate( {_id : req.query.build_id} , objectUpdate, { new: true });
-                // console.log(edit);
-                if (edit) {
-                    return (res.status(200).json({
-                        code: 200,
-                        message: "successfuly edit..",
-                        data:edit
-                    }))
-                }
-                else {
-                    return (res.status(400).json({
-                        code: 400,
-                        message: "somthing went wrong!"
-                    }))
-                }
+                return (res.status(400).json({
+                    code: 400,
+                    message: "somthing went wrong!"
+                }))
             }
+
         }
         catch (err) {
             console.log(err)
@@ -191,7 +190,7 @@ exports.updateStatus = [
             if (find) {
                 // console.log(find);
                 if (find.status == true) {
-                    const update = await BUILDINGS.updateOne({_id:find._id},{status:false})
+                    const update = await BUILDINGS.updateOne({ _id: find._id }, { status: false })
                     if (update) {
                         return (res.status(200).json({
                             code: 200,
@@ -206,7 +205,7 @@ exports.updateStatus = [
                     }
                 }
                 else {
-                    const update = await BUILDINGS.updateOne({_id:find._id},{status:true})
+                    const update = await BUILDINGS.updateOne({ _id: find._id }, { status: true })
                     if (update) {
                         return (res.status(200).json({
                             code: 200,
@@ -238,34 +237,37 @@ exports.updateStatus = [
     }
 ]
 
+// exports.getBuildings = async (req, res) => {
+//     try {
+//         let page = Number(req.query.page) || 1;
+//         let limit = Number(req.query.limit) || 5;
+//         let skip = (page - 1) * limit;
+//         const get = await BUILDINGS.find().skip(skip).limit(limit);
+//         const units = await UNITS.find().count();
+//         const unitsNumber = await UNITS.find().count();
+//         if (get.length > 0) {
+//             return (res.status(200).json({
+//                 code: 200,
+//                 message: "Buildings get Successfully",
+//                 data: get,units
+//             }))
+//         }
 
-
-exports.getBuildings = async (req, res) => {
-    try {
-        const get = await BUILDINGS.find();
-        // console.log(">>>",get);
-        if (get.length > 0) {
-            return (res.status(200).json({
-                code: 200,
-                message: "Buildings get Successfully",
-                data: get
-            }))
-        }
-        else {
-            return (res.status(404).json({
-                code: 404,
-                message: "No Building Found",
-            }))
-        }
-    }
-    catch (err) {
-        console.log(err)
-        return (res.status(500).json({
-            code: 500,
-            message: "Catch Error!!!",
-        }))
-    }
-}
+//         else {
+//             return (res.status(404).json({
+//                 code: 404,
+//                 message: "No Building Found",
+//             }))
+//         }
+//     }
+//     catch (err) {
+//         console.log(err)
+//         return (res.status(500).json({
+//             code: 500,
+//             message: "Catch Error!!!",
+//         }))
+//     }
+// }
 
 exports.searchBuildings = [
     async (req, res) => {
@@ -273,12 +275,12 @@ exports.searchBuildings = [
             const { search } = req.query
             if (search) {
                 const findBuilding = await BUILDINGS.find({ buildingName: { $regex: `^${search ? search : ''}`, $options: 'i' } });
-                    return (res.status(200).json({
-                        code: 200,
-                        message: "Building Found",
-                        data:findBuilding ,
-                    }))
-                }
+                return (res.status(200).json({
+                    code: 200,
+                    message: "Building Found",
+                    data: findBuilding,
+                }))
+            }
         }
         catch (err) {
             console.log(err)
@@ -289,5 +291,52 @@ exports.searchBuildings = [
         }
     }
 ]
+exports.getBuildings = async (req, res) => {
+    try {
+        let page = Number(req.query.page) || 1;
+        let limit = Number(req.query.limit) || 5;
+        let skip = (page - 1) * limit;
 
+        const buildings = await BUILDINGS.aggregate([
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: "units", 
+                    localField: "_id", 
+                    foreignField: "building_id", 
+                    as: "units" 
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    buildingName: 1,
+                    address: 1,
+                    locationLink:1,
+                    status:1,
+                    units: { $size: "$units" } 
+                }
+            }
+        ]);
 
+        if (buildings.length > 0) {
+            return res.status(200).json({
+                code: 200,
+                message: "Buildings fetched successfully",
+                data: buildings
+            });
+        } else {
+            return res.status(404).json({
+                code: 404,
+                message: "No Building Found"
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            code: 500,
+            message: "Internal Server Error"
+        });
+    }
+}

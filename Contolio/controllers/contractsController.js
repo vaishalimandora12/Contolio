@@ -8,7 +8,7 @@ exports.addContract = [
     body('contract_name').trim().exists().notEmpty().withMessage('contract name is required'),
     body('start_date').exists().notEmpty().withMessage('start date is required'),
     body('expiry_date').exists().notEmpty().withMessage('expiry date is required'),
-    async (req,res) => {
+    async (req, res) => {
         try {
             const error = validationResult(req);
             if (!error.isEmpty()) {
@@ -17,8 +17,8 @@ exports.addContract = [
                     message: error.array()[0]['msg']
                 }))
             }
-            const { contract_name, building_id, unit_id, start_date, expiry_date } = req.body;
-            const upload_image = req.file.filename;
+            const { contract_name, building_id, unit_id, start_date, expiry_date, upload_image } = req.body;
+            // const upload_image = req.file.filename;
             refData = {
                 unit_id: unit_id,
                 building_id: building_id,
@@ -28,7 +28,6 @@ exports.addContract = [
                 upload_image: upload_image,
             }
             const addContracts = await CONTRACTS.create(refData)
-            // console.log(">>>>>>>>>",addContracts);
             if (addContracts) {
                 return (res.status(200).json({
                     code: 200,
@@ -54,22 +53,44 @@ exports.addContract = [
 ]
 
 exports.getContracts = async (req, res) => {
+    let page = Number(req.query.page) || 1;
+    let limit = Number(req.query.limit) || 5;
+    let skip = (page - 1) * limit;
     try {
-        const get = await CONTRACTS.find();
+        const get = await CONTRACTS.aggregate([
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: "building_managements",
+                    localField: "building_id",
+                    foreignField: "_id",
+                    as: "buildingDetail"
+                }
+            },
+            {
+                $lookup: {
+                    from: "units",
+                    localField: "unit_id",
+                    foreignField: "_id",
+                    as: "unitDetail"
+                }
+            },
+        ]);
         if (get.length > 0) {
             return (res.status(200).json({
                 code: 200,
                 message: "Contracts get Successfully",
-                data:get              
+                data: get
             }))
         }
-        
         else {
             return (res.status(404).json({
                 code: 404,
                 message: "No Contract Found",
             }))
         }
+
     }
     catch (err) {
         console.log(err)
@@ -79,6 +100,7 @@ exports.getContracts = async (req, res) => {
         }))
     }
 }
+
 exports.deleteContract = [
     async (req, res) => {
         try {
@@ -115,60 +137,45 @@ exports.deleteContract = [
     }
 ]
 
-// exports.searchContracts = [
-//     async (req, res) => {
-//         try {
-//             const { search } = req.query
-//             if (search) {
-//                 const findContract = await CONTRACTS.aggregate(
-//                     {
-//                         $or: [
-//                             {contract_name: { $regex: ".*" + search + ".*", $options: 'i' }},
-//                             {unitNo: { $regex: ".*" + search + ".*", $options: 'i' }},
-//                            ],
-//                     }
-//                 );
-//                 console.log("find=====",findContract);
-//                 return (res.status(200).json({
-//                     code: 200,
-//                     message: "Contract Found",
-//                     data: findContract,
-//                 }))
-//             }
-//         }
-//         catch (err) {
-//             console.log(err)
-//             return (res.status(500).json({
-//                 code: 500,
-//                 message: "catch error!!"
-//             }))
-//         }
-//     }
-// ]
-
 exports.searchContracts = [
     async (req, res) => {
         try {
             const { search } = req.query;
             if (search) {
-                const findContract = await CONTRACTS.find(
+                const findContract = await CONTRACTS.aggregate([
                     {
-                     contract_name: { $regex: ".*" + search + ".*", $options: 'i' }  
-                    } ,   
-
-               );
-                console.log("find=====", findContract);
+                        $match: {
+                            contract_name: { $regex: ".*" + search + ".*", $options: 'i' }
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "building_managements",
+                            localField: "building_id",
+                            foreignField: "_id",
+                            as: "buildingDetail"
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "units",
+                            localField: "unit_id",
+                            foreignField: "_id",
+                            as: "unitDetail"
+                        }
+                    },
+                ])
                 return res.status(200).json({
                     code: 200,
                     message: "Contract Found",
                     data: findContract,
                 });
-            } 
+            }
         } catch (err) {
             console.log(err);
             return res.status(500).json({
                 code: 500,
-                message:"catch Error",
+                message: "catch Error",
             });
         }
     }

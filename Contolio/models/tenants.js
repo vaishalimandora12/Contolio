@@ -11,9 +11,12 @@ const tenantsSchema = new mongoose.Schema({
         ref: 'units'
     },
     contract_id: {
-        type: mongoose.Types.ObjectId,
-        required: true,
+        type: [],
         ref: 'contracts'
+    },
+    payment_id:{
+        type: Array,
+        ref:'payments',
     },
     tenantName: {
         type: String,
@@ -42,12 +45,21 @@ const tenantsSchema = new mongoose.Schema({
     search: {
         type: String,
     },
+    country: {
+        type: String,
+    },
     payment:{
         type:String,
+        enum:['Manual','Cheque']
     },
     created_on:{
         type:Date,
         default:Date()
+    },
+    tenant_view_button:{
+        type:String,
+        enum:['Cancel','Reject','Verify'],
+        default: 'Cancel'
     },
 })
 

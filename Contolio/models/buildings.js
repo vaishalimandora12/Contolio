@@ -25,6 +25,10 @@ const buildingManagementSchema=new mongoose.Schema({
     created_build_id:
     {
         type:String
+    },
+    owner_id:{
+        type: mongoose.Types.ObjectId,
+        ref:"owners"
     }
 });
 

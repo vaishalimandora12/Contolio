@@ -529,12 +529,6 @@ exports.getUserProfile = [
     }
 ]
 
-
-
-
-
-
-
 exports.addUser = [
 
     body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
@@ -668,28 +662,8 @@ exports.login = [
 
 
 exports.editUserProfile = [
-    // body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
-    //.isEmail().withMessage('Email must be a valid email address'),
-    body('firstname').trim().exists().notEmpty().withMessage('first name is required')
-        .isLength({ min: 1, max: 20 }).withMessage('first name must be min 1 and max 20 in lengths'),
-    body('phone').trim().exists().notEmpty().withMessage('Phone number is required')
-        .isLength({ min: 10 }).withMessage('Enter valid phone number'),
-    body('role').trim().exists().notEmpty().withMessage('role is required'),
-    body('country').trim().exists().notEmpty().withMessage('country is required'),
-    body('company').trim().exists().notEmpty().withMessage('company is required'),
-    body('officeContact').trim().exists().notEmpty().withMessage('office contact is required'),
     async (req, res) => {
         try {
-            const error = validationResult(req);
-            if (!error.isEmpty()) {
-                return res.status(400).json({
-                    code: 400,
-                    message: error.array()[0]['msg']
-                })
-            }
-
-            console.log('aaaaaaaa', req.body);
-            //return
             const arrayOfEditKeys = ["firstname", "phone", "role", "country", "officeContact", "company"];
             // let objectUpdate = {}
 
@@ -705,7 +679,6 @@ exports.editUserProfile = [
                     objectUpdate[key] = req.body[key]
                 }
             }
-
             console.log('object', objectUpdate);
             //  const email=req.body.email.toLowerCase();
             const update = await USER.findOneAndUpdate({ _id: req.currentUser._id }, objectUpdate, { new: true });

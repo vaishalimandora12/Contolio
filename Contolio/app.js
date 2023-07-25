@@ -15,6 +15,9 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.set("views", path.join(__dirname, "storeImage"));
 app.set("view engine", "ejs");
 
+// const morgan = require('morgan');
+// app.use(morgan('dev'));
+
 
 const userRoute = require('./routes/usersRoute');
 app.use('/', userRoute);
