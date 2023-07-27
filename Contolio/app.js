@@ -40,6 +40,8 @@ app.use('/', contractsRoute);
 const paymentRoute=require('./routes/paymentsRoute');
 app.use('/', paymentRoute);
 
+const maintanenceRoute=require('./routes/maintanenceRoute');
+app.use('/', maintanenceRoute);
 
 app.listen(port, () => {
    console.log(`App is listening on port :${port}`)

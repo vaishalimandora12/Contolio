@@ -82,18 +82,20 @@ exports.addTenants = [
 
 exports.showTenantRequest =[
     async (req, res) => {
-    let page = Number(req.query.page) || 1;
-    let limit = Number(req.query.limit) || 5;
-    let skip = (page - 1) * limit;
     try {
+        let page = Number(req.query.page) || 1;
+        let limit = Number(req.query.limit) || 5;
+        let skip = (page - 1) * limit;
+
+        const totalDocuments = await TENANTS.countDocuments({ tenant_status: "Request" })
         const get = await TENANTS.aggregate([
-            { $skip: skip },
-            { $limit: limit },
             {
                 $match: {
                     tenant_status: "Request",
                 }
             },
+            { $skip: skip },
+            { $limit: limit },
             {
                 $lookup: {
                     from: "building_managements",
@@ -112,10 +114,12 @@ exports.showTenantRequest =[
             },
         ]);
         if (get.length > 0) {
+            const totalPages = Math.round(totalDocuments / limit);
             return (res.status(200).json({
                 code: 200,
                 message: "Tenants Request get Successfully",
-                data: get
+                data: get,
+                totalPages:totalPages
             }))
         }
         else {
@@ -267,7 +271,7 @@ exports.verifyAndLinkTenant = [
             });
         }
     }
-];
+]
 
 exports.linkedTenantWithPayments = [
     async (req, res) => {
@@ -298,59 +302,62 @@ exports.linkedTenantWithPayments = [
 
 exports.showLinkedTenants = [
     async (req, res) => {
-    let page = Number(req.query.page) || 1;
-    let limit = Number(req.query.limit) || 5;
-    let skip = (page - 1) * limit;
-    try {
-        const get = await TENANTS.aggregate([
-            { $skip: skip },
-            { $limit: limit },
-            {
-                $match: {
-                    tenant_status: "Linked",
-                }
-            },
-            {
-                $lookup: {
-                    from: "building_managements",
-                    localField: "building_id",
-                    foreignField: "_id",
-                    as: "buildingDetail"
-                }
-            },
-            {
-                $lookup: {
-                    from: "units",
-                    localField: "unit_id",
-                    foreignField: "_id",
-                    as: "unitDetail"
-                }
-            },
-        ]);
-        if (get.length > 0) {
-            return (res.status(200).json({
-                code: 200,
-                message: " Linked Tenants get Successfully",
-                data: get
-            }))
-        }
-        else {
-            return (res.status(404).json({
-                code: 404,
-                message: "No Tenant Found",
-            }))
-        }
+        try {
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit);
+            let skip = (page - 1) * limit;
+            const totalDocuments = await TENANTS.countDocuments({ tenant_status: "Linked" })
+            const get = await TENANTS.aggregate([
+                {
+                    $match: {
+                        tenant_status: "Linked",
+                    }
+                },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $lookup: {
+                        from: "building_managements",
+                        localField: "building_id",
+                        foreignField: "_id",
+                        as: "buildingDetail"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "units",
+                        localField: "unit_id",
+                        foreignField: "_id",
+                        as: "unitDetail"
+                    }
+                },
+            ]);
+            if (get.length > 0) {
+                const totalPages = Math.round(totalDocuments / limit);
+                return (res.status(200).json({
+                    code: 200,
+                    message: " Linked Tenants get Successfully",
+                    data: get,
+                    totalPages: totalPages
+                }))
+            }
+            else {
+                return (res.status(404).json({
+                    code: 404,
+                    message: "No Tenant Found",
+                }))
+            }
 
-    }
-    catch (err) {
-        console.log(err)
-        return (res.status(500).json({
-            code: 500,
-            message: "Catch Error!!!",
-        }))
+        }
+        catch (err) {
+            console.log(err)
+            return (res.status(500).json({
+                code: 500,
+                message: "Catch Error!!!",
+            }))
 
+        }
     }
-}
 ]
 
 exports.getTenantDetails = [
@@ -464,8 +471,7 @@ exports.searchLinkedTenant = [
             });
         }
     }
-];
-
+]
 
 exports.searchRequestTenant = [
     async (req, res) => {
@@ -511,5 +517,4 @@ exports.searchRequestTenant = [
             });
         }
     }
-];
-
+]

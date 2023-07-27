@@ -291,12 +291,14 @@ exports.searchBuildings = [
         }
     }
 ]
-exports.getBuildings = async (req, res) => {
+exports.getBuildings = [
+    async (req, res) => {
     try {
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 5;
+        let page = Number(req.query.page);
+        let limit = Number(req.query.limit);
         let skip = (page - 1) * limit;
-
+        
+        const totalDocuments=await BUILDINGS.countDocuments();
         const buildings = await BUILDINGS.aggregate([
             { $skip: skip },
             { $limit: limit },
@@ -321,10 +323,13 @@ exports.getBuildings = async (req, res) => {
         ]);
 
         if (buildings.length > 0) {
+            const totalPages= Math.ceil(totalDocuments/limit);
             return res.status(200).json({
                 code: 200,
                 message: "Buildings fetched successfully",
-                data: buildings
+                data: buildings,
+                totalPages:totalPages
+
             });
         } else {
             return res.status(404).json({
@@ -340,3 +345,4 @@ exports.getBuildings = async (req, res) => {
         });
     }
 }
+]

@@ -243,10 +243,17 @@ exports.addAvUnits = [
 exports.showAvUnits = [
     async (req, res) => {
         try {
-            let page = Number(req.query.page) || 1;
-            let limit = Number(req.query.limit) || 5;
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit);
             let skip = (page - 1) * limit;
+            const totalDocuments = await UNITS.countDocuments({ fullUnit: { $ne: true } });
+
             const get = await UNITS.aggregate([
+                {
+                    $match: {
+                        fullUnit: { $ne: true },
+                    },
+                },
                 { $skip: skip },
                 { $limit: limit },
                 {
@@ -254,35 +261,34 @@ exports.showAvUnits = [
                         from: "building_managements",
                         localField: "building_id",
                         foreignField: "_id",
-                        as: "buildingDetail"
-                    }
+                        as: "buildingDetail",
+                    },
                 },
             ]);
-            if (get.length > 0) {
-                return (res.status(200).json({
-                    code: 200,
-                    message: " Available Units get Successfully",
-                    data: get
-                }))
-            }
-            else {
-                return (res.status(404).json({
-                    code: 404,
-                    message: "No Avaailable Units Found",
-                }))
-            }
 
-        }
-        catch (err) {
-            console.log(err)
-            return (res.status(500).json({
+            if (get.length > 0) {
+                const totalPages = Math.ceil(totalDocuments / limit);
+                return res.status(200).json({
+                    code: 200,
+                    message: "Available Units fetched Successfully",
+                    data: get,
+                    totalPages: totalPages,
+                });
+            } else {
+                return res.status(404).json({
+                    code: 404,
+                    message: "No Available Units Found",
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
                 code: 500,
                 message: "Catch Error!!!",
-            }))
-
+            });
         }
-    }
-]
+    },
+];
 
 exports.editAvUnit = [
     async (req, res) => {
@@ -321,17 +327,19 @@ exports.editAvUnit = [
 exports.showUnits = [
     async (req, res) => {
         try {
-            let page = Number(req.query.page) || 1;
-            let limit = Number(req.query.limit) || 5;
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit);
             let skip = (page - 1) * limit;
+            const totalDocuments = await UNITS.countDocuments({ fullUnit:"true"});
+
             const get = await UNITS.aggregate([
-                { $skip: skip },
-                { $limit: limit },
                 {
                     $match: {
                         fullUnit: "true",
                     }
                 },
+                { $skip: skip },
+                { $limit: limit },
                 {
                     $unwind: "$tenant_id",
                     // preseveNullAndEmptyArray: true,
@@ -374,10 +382,12 @@ exports.showUnits = [
 
             ]);
             if (get.length > 0) {
+                const totalPages = Math.ceil(totalDocuments / limit);
                 return (res.status(200).json({
                     code: 200,
                     message: "Units get Successfully",
-                    data: get
+                    data: get,
+                    totalPages:totalPages
                 }))
             }
             else {

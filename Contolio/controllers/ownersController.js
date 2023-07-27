@@ -75,34 +75,40 @@ exports.addOwners = [
     }
 ]
 
-exports.getOwners = async (req, res) => {
-    let page = Number(req.query.page) || 1;
-    let limit = Number(req.query.limit) || 5;
-    let skip = (page - 1) * limit;
-    try {
-        const get = await OWNERS.find().skip(skip).limit(limit);
-        if (get.length > 0) {
-            return (res.status(200).json({
-                code: 200,
-                message: "Owners get Successfully",
-                data: get
-            }))
+exports.getOwners = [
+    async (req, res) => {
+        try {
+            let page = Number(req.query.page) || 1;
+            let limit = Number(req.query.limit) || 5;
+            let skip = (page - 1) * limit;
+
+            const totalDocuments = await OWNERS.countDocuments();
+            const get = await OWNERS.find().skip(skip).limit(limit);
+            if (get.length > 0) {
+                const totalPages = Math.ceil(totalDocuments / limit);
+                return (res.status(200).json({
+                    code: 200,
+                    message: "Owners get Successfully",
+                    data: get,
+                    totalPages: totalPages
+                }))
+            }
+            else {
+                return (res.status(404).json({
+                    code: 404,
+                    message: "No Owners Found",
+                }))
+            }
         }
-        else {
-            return (res.status(404).json({
-                code: 404,
-                message: "No Owners Found",
+        catch (err) {
+            console.log(err)
+            return (res.status(500).json({
+                code: 500,
+                message: "Catch Error!!!",
             }))
         }
     }
-    catch (err) {
-        console.log(err)
-        return (res.status(500).json({
-            code: 500,
-            message: "Catch Error!!!",
-        }))
-    }
-}
+]
 
 exports.editOwnerDetails = [
     async (req, res) => {

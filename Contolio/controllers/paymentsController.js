@@ -155,18 +155,20 @@ exports.addPayment = [
 
 exports.getManualPayments = [
     async (req, res) => {
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 5;
-        let skip = (page - 1) * limit;
         try {
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit);
+            let skip = (page - 1) * limit;
+
+            const totalDocuments = await PAYMENTS.countDocuments({ payment_type:"1" });
             const get = await PAYMENTS.aggregate([
-                { $skip: skip },
-                { $limit: limit },
                 {
                     $match: {
                         payment_type: "1",
                     }
                 },
+                { $skip: skip },
+                { $limit: limit },
                 {
                     $lookup: {
                         from: "building_managements",
@@ -193,10 +195,12 @@ exports.getManualPayments = [
                 },
             ]);
             if (get.length > 0) {
+                const totalPages = Math.ceil(totalDocuments / limit);
                 return (res.status(200).json({
                     code: 200,
                     message: " Manual Payments get Successfully",
-                    data: get
+                    data: get,
+                    totalPages: totalPages
                 }))
             }
             else {
@@ -220,18 +224,20 @@ exports.getManualPayments = [
 
 exports.getChequePayments = [
     async (req, res) => {
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 5;
-        let skip = (page - 1) * limit;
         try {
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit) ;
+            let skip = (page - 1) * limit;
+
+            const totalDocuments = await PAYMENTS.countDocuments({ payment_type:"2" });
             const get = await PAYMENTS.aggregate([
-                { $skip: skip },
-                { $limit: limit },
                 {
                     $match: {
                         payment_type: "2",
                     }
                 },
+                { $skip: skip },
+                { $limit: limit },
                 {
                     $lookup: {
                         from: "building_managements",
@@ -259,10 +265,12 @@ exports.getChequePayments = [
 
             ]);
             if (get.length > 0) {
+                const totalPages= Math.ceil(totalDocuments/limit);
                 return (res.status(200).json({
                     code: 200,
                     message: " cheque Payments get Successfully",
-                    data: get
+                    data: get,
+                    totalPages:totalPages
                 }))
             }
             else {
@@ -544,3 +552,4 @@ exports.searchManualPayments = [
 //         }
 //     },
 // ];
+
