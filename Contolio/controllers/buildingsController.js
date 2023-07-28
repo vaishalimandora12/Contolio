@@ -2,6 +2,7 @@ const BUILDINGS = require('../models/buildings');
 const JWT = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const UNITS = require("../models/units");
+const { default: mongoose } = require('mongoose');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -69,45 +70,64 @@ exports.addBuildings = [
 
 exports.getBuildingDetails = [
     async (req, res) => {
-        try {
-            const build_id = req.query.build_id
-            let building_id = build_id;
-            const find = await BUILDINGS.findOne({ _id: build_id })
-            const unitsNumber = await UNITS.findOne({ building_id }).count();
-            const units = await UNITS.aggregate([{
-                $match: { fullUnit: "true" }
-            }, {
-                $lookup: {
+      try {
+        const build_id = req.query.build_id;
+        const find = await BUILDINGS.findOne({ _id: build_id });
+        const unitsNumber = await UNITS.countDocuments({ building_id: build_id });
+  
+        const checkFullUnits = await BUILDINGS.aggregate([
+          {
+            $match: {
+              _id: new mongoose.Types.ObjectId(build_id),
+            },
+          },
+          {
+            $lookup: {
+              from: "units",
+              localField: "_id",
+              foreignField: "building_id",
+              as: "unitsDetails",
+              pipeline: [
+                {
+                  $match: {
+                    fullUnit: "true",
+                  },
+                },
+                {
+                  $lookup: {
                     from: "owners",
                     localField: "owner_id",
                     foreignField: "_id",
-                    as: "OwnerDetails"
-                }
-            }])
-            if (!find) {
-                return (res.status(400).json({
-                    code: 400,
-                    message: "This building does not exists..."
-                }))
-            }
-            else {
-                return (res.status(200).json({
-                    code: 200,
-                    message: "Building details fetch successfully...",
-                    data: find, unitsNumber, units
-                }))
-            }
+                    as: "OwnerDetails",
+                  },
+                },
+              ],
+            },
+          },
+        ]);
+  
+        if (checkFullUnits.length === 0) {
+          return res.status(400).json({
+            code: 400,
+            message: "This building does not exist...",
+          });
+        } else {
+          return res.status(200).json({
+            code: 200,
+            message: "Building details fetched successfully...",
+            data: checkFullUnits, unitsNumber,
+          });
         }
-        catch (err) {
-            console.log(err);
-            return (res.status(500).json({
-                code: 500,
-                message: "Catch Errorr.."
-            }))
-        }
-    }
-]
-
+      } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+          code: 500,
+          message: "Catch Error...",
+        });
+      }
+    },
+  ];
+  
 
 exports.deleteBuilding = [
     async (req, res) => {
@@ -239,8 +259,8 @@ exports.updateStatus = [
 
 // exports.getBuildings = async (req, res) => {
 //     try {
-//         let page = Number(req.query.page) || 1;
-//         let limit = Number(req.query.limit) || 5;
+//         let page = Number(req.query.page);
+//         let limit = Number(req.query.limit);
 //         let skip = (page - 1) * limit;
 //         const get = await BUILDINGS.find().skip(skip).limit(limit);
 //         const units = await UNITS.find().count();
@@ -294,11 +314,16 @@ exports.searchBuildings = [
 exports.getBuildings = [
     async (req, res) => {
     try {
+        const totalDocuments=await BUILDINGS.countDocuments();
         let page = Number(req.query.page);
         let limit = Number(req.query.limit);
+        if(page==0){
+            page=1;
+        }
+        if(limit==0){
+            limit=totalDocuments;
+        }
         let skip = (page - 1) * limit;
-        
-        const totalDocuments=await BUILDINGS.countDocuments();
         const buildings = await BUILDINGS.aggregate([
             { $skip: skip },
             { $limit: limit },
@@ -317,11 +342,11 @@ exports.getBuildings = [
                     address: 1,
                     locationLink:1,
                     status:1,
+                    description:1,
                     units: { $size: "$units" } 
                 }
             }
         ]);
-
         if (buildings.length > 0) {
             const totalPages= Math.ceil(totalDocuments/limit);
             return res.status(200).json({
@@ -341,7 +366,7 @@ exports.getBuildings = [
         console.log(err);
         return res.status(500).json({
             code: 500,
-            message: "Internal Server Error"
+            message: "Catch Error"
         });
     }
 }

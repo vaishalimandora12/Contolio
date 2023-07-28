@@ -440,8 +440,6 @@ exports.searchChequePayments = [
                     }
                 },
             ])
-            console.log(">>>>>>", findChequePayment);
-
             return res.status(200).json({
                 code: 200,
                 message: "Payment Found",
@@ -552,4 +550,3 @@ exports.searchManualPayments = [
 //         }
 //     },
 // ];
-

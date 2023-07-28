@@ -55,8 +55,8 @@ exports.addContract = [
 exports.getContracts = [
     async (req, res) => {
         try {
-            let page = Number(req.query.page) || 1;
-            let limit = Number(req.query.limit) || 5;
+            let page = Number(req.query.page);
+            let limit = Number(req.query.limit);
             let skip = (page - 1) * limit;
 
             const totalDocuments = await CONTRACTS.countDocuments();

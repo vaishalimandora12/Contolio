@@ -83,8 +83,8 @@ exports.addTenants = [
 exports.showTenantRequest =[
     async (req, res) => {
     try {
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 5;
+        let page = Number(req.query.page);
+        let limit = Number(req.query.limit) ;
         let skip = (page - 1) * limit;
 
         const totalDocuments = await TENANTS.countDocuments({ tenant_status: "Request" })
@@ -94,6 +94,7 @@ exports.showTenantRequest =[
                     tenant_status: "Request",
                 }
             },
+
             { $skip: skip },
             { $limit: limit },
             {
@@ -114,7 +115,7 @@ exports.showTenantRequest =[
             },
         ]);
         if (get.length > 0) {
-            const totalPages = Math.round(totalDocuments / limit);
+            const totalPages = Math.ceil(totalDocuments / limit);
             return (res.status(200).json({
                 code: 200,
                 message: "Tenants Request get Successfully",
@@ -303,10 +304,16 @@ exports.linkedTenantWithPayments = [
 exports.showLinkedTenants = [
     async (req, res) => {
         try {
+            const totalDocuments = await TENANTS.countDocuments({ tenant_status: "Linked" })
             let page = Number(req.query.page);
             let limit = Number(req.query.limit);
+            if(page==0){
+                page=1;
+            }
+            if(limit==0){
+                limit=totalDocuments;
+            }
             let skip = (page - 1) * limit;
-            const totalDocuments = await TENANTS.countDocuments({ tenant_status: "Linked" })
             const get = await TENANTS.aggregate([
                 {
                     $match: {
@@ -333,7 +340,7 @@ exports.showLinkedTenants = [
                 },
             ]);
             if (get.length > 0) {
-                const totalPages = Math.round(totalDocuments / limit);
+                const totalPages = Math.ceil(totalDocuments / limit);
                 return (res.status(200).json({
                     code: 200,
                     message: " Linked Tenants get Successfully",
@@ -518,3 +525,5 @@ exports.searchRequestTenant = [
         }
     }
 ]
+
+

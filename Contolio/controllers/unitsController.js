@@ -1,8 +1,7 @@
 const UNITS = require('../models/units');
-const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
-const { pipeline } = require('nodemailer/lib/xoauth2');
+// const { pipeline } = require('nodemailer/lib/xoauth2');
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -243,11 +242,17 @@ exports.addAvUnits = [
 exports.showAvUnits = [
     async (req, res) => {
         try {
+            const totalDocuments = await UNITS.countDocuments({ fullUnit: { $ne: true } });
             let page = Number(req.query.page);
             let limit = Number(req.query.limit);
+            if(page==0){
+                page=1;
+            }
+            if(limit==0){
+                limit=totalDocuments;
+            }
+            
             let skip = (page - 1) * limit;
-            const totalDocuments = await UNITS.countDocuments({ fullUnit: { $ne: true } });
-
             const get = await UNITS.aggregate([
                 {
                     $match: {
@@ -522,4 +527,3 @@ exports.searchAvUnits = [
         }
     }
 ];
-
