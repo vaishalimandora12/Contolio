@@ -3,7 +3,7 @@ const middleware=require('../middleware/middlewareUser');
 const express=require('express');
 const router=express.Router()
 
-console.log('hiiiii');
+// console.log('hiiiii');
 router.post('/addBuildings', middleware,buildingController.addBuildings);
 router.get('/getBuildingDetails',middleware,buildingController.getBuildingDetails);
 router.get('/getBuildings',middleware,buildingController.getBuildings);

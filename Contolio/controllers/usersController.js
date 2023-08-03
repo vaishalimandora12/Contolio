@@ -94,7 +94,6 @@ exports.register = [
             const { email, password } = req.body;
 
             const findUser = await USER.findOne({ email: email })
-
             if (findUser) {
                 return res.status(200).json({
                     code: 200,
@@ -660,29 +659,17 @@ exports.login = [
     }
 ]
 
-
 exports.editUserProfile = [
     async (req, res) => {
         try {
             const arrayOfEditKeys = ["firstname", "phone", "role", "country", "officeContact", "company"];
-            // let objectUpdate = {}
-
-            // for (i = 0; i < arrayOfEditKeys.length; i++) {
-            //     if (req.body[arrayOfEditKeys[i]] != null && req.body[arrayOfEditKeys[i]] !=undefined) {
-            //         objectUpdate[arrayOfEditKeys[i]] = req.body[req.body[arrayOfEditKeys[i]]]
-            //     }
-            // }
-
             const objectUpdate = {};
             for (const key of arrayOfEditKeys) {
                 if (req.body[key] != null) {
-                    objectUpdate[key] = req.body[key]
+                    objectUpdate[key] = req.body[key];
                 }
             }
-            console.log('object', objectUpdate);
-            //  const email=req.body.email.toLowerCase();
             const update = await USER.findOneAndUpdate({ _id: req.currentUser._id }, objectUpdate, { new: true });
-            console.log(update);
             if (!update) {
                 return (res.status(400).json({
                     code: 400,
@@ -771,58 +758,55 @@ exports.forgotPassword = [
                 return res.status(400).json({
                     code: 400,
                     message: error.array()[0]['msg']
-                })
+                });
             }
+
             const { email } = req.body;
-            const check = await USER.findOne({ email: email });
-            // console.log("check>>>>>>>", check);
+            const user = await USER.findOne({ email: email });
+            if (!user) {
+                return res.status(404).json({
+                    code: 404,
+                    message: "Email does not exist"
+                });
+            }
+
             const mailer = nodemailer.createTransport({
                 service: "gmail",
                 host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
+                port: 587, // Use port 587 for secure connections with secure: false
+                secure: false,
                 auth: {
                     user: process.env.MAIL_USERNAME,
                     pass: process.env.MAIL_PASSWORD,
                 },
                 tls: {
                     rejectUnauthorized: false,
-                  }
+                }
             });
-            // console.log("=======",check.email)
+            
+            const resetLink = `${req.protocol}://${req.headers.host}/reset-password?token=${user.resetToken}`;
             await mailer.sendMail({
                 from: "vaishalimandora12@gmail.com",
-                to: check.email,
-                subject: "FORGOT YOUR PASSWORD",
+                to: user.email,
+                subject: "FORGOT PASSWORD",
                 html: `
-                 <h3>Click the link below to reset you're password</h3>
-                 ${req.protocol}://${req.headers.host}`,
+                    <h3>Click the link below to reset your password</h3>
+                    <a href="${resetLink}">${resetLink}</a>`,
             });
-
-            // if (check) {
-            //     return (res.status(200).json({
-            //         code: 200,
-            //         message: "OTP SENT,please check your email"
-            //     }))
-
-            // }
-            // else {
-            //     return (res.status(400).json({
-            //         code: 400,
-            //         message: "Email does not exist"
-            //     }))
-            // }
-            res.status(201).json({
-                message:"code sent successfullyyyy...."
-            })
-        }
-        catch (err) {
-            console.log(err)
-            return (res.status(500).json({
+            res.status(200).json({
+                code: 200,
+                message: "Reset link sent successfully"
+            });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json({
                 code: 500,
                 message: "Catch Error"
-            }))
-
+            });
         }
     }
 ]
+
+
+
+

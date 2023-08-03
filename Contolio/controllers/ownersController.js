@@ -12,7 +12,6 @@ function generateRandomString(length) {
     }
     return result;
 }
-// Example usage: generate a random string of length 10
 const randomString = generateRandomString(6);
 
 

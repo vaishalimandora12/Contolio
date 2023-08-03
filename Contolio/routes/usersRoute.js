@@ -2,7 +2,7 @@ const express=require('express');
 const router=express.Router();
 const userController=require('../controllers/usersController');
 const middleware=require('../middleware/middlewareUser');
-console.log('here')
+// console.log('here')
 
 router.post('/singInLogin', userController.singInLogin);
 router.post('/register',userController.register);
