@@ -141,7 +141,8 @@ exports.register = [
                 message: "CATCH ERROR"
             }))
         };
-    }];
+    }
+]
 
 exports.otpRegister = [
     body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
@@ -426,7 +427,6 @@ exports.otpSignUpLogin = [
         }
     }
 ]
-
 
 exports.changePassword = [
     body('email').trim().exists().notEmpty().isLength({ min: 3 }).withMessage('Email is required')
@@ -806,7 +806,4 @@ exports.forgotPassword = [
         }
     }
 ]
-
-
-
 
